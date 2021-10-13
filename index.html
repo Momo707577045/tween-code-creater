@@ -34,6 +34,29 @@ body {
   font-weight: bold;
   white-space: pre-line;
 }
+.p-github, .p-other {
+  position: fixed;
+  right: 50px;
+  bottom: 70px;
+  background-color: #eff3f6;
+  background-image: linear-gradient(-180deg, #fafbfc, #eff3f6 90%);
+  color: #24292e;
+  border: 1px solid rgba(27, 31, 35, .2);
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 6px 12px;
+  z-index: 3;
+}
+.p-github:hover, .p-other:hover {
+  opacity: 0.9;
+}
+.p-other {
+  bottom: 30px;
+}
 /*动画图例子*/
 .iframe-box {
   position: relative;
@@ -93,17 +116,37 @@ body {
   width: 100%;
 }
 .input-group .input-box {
+  position: relative;
   flex: 1;
   margin-right: 10px;
 }
 .input-group .input-box:last-child {
   margin-right: 0;
 }
+.input-group .input-box:before {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  font-size: 24px;
+  color: #aaaaaa;
+  z-index: 2;
+}
+.input-group .input-box:nth-child(1):before {
+  content: '起始值：';
+}
+.input-group .input-box:nth-child(2):before {
+  content: '结束值：';
+}
+.input-group .input-box:nth-child(3):before {
+  content: '动画时长：';
+}
 .input-group .input-box input {
+  position: relative;
   width: 100%;
   min-width: unset;
   display: block;
   padding: 16px;
+  text-align: right;
   font-size: 24px;
   border-radius: 4px;
   box-sizing: border-box;
@@ -194,6 +237,10 @@ body {
 <body>
 <section id="app" v-cloak="">
   <section class="p-action g-box">{{ tips }}</section>
+  <!--外链-->
+  <a class="p-github" target="_blank" href="https://github.com/Momo707577045/tween-code-creator">github</a>
+  <a class="p-other" target="_blank" href="http://blog.luckly-mjw.cn/tool-show/index.html">其他实用工具</a>
+  <!--第三方动画示例  -->
   <div class="iframe-box">
     <div class="intro">第三方动画图例</div>
     <iframe src="https://www.xuanfengge.com/easeing/easeing/" frameborder="0"></iframe>
@@ -208,9 +255,9 @@ body {
   </div>
   <!--信息输入框-->
   <section class="input-group">
-    <div class="input-box"><input type="number" v-model="startValue" placeholder="起始值"></div>
-    <div class="input-box"><input type="number" v-model="endValue" placeholder="结束值"></div>
-    <div class="input-box"><input type="number" v-model="durationTime" placeholder="动画时长"></div>
+    <div class="input-box"><input type="number" v-model="startValue"></div>
+    <div class="input-box"><input type="number" v-model="endValue"></div>
+    <div class="input-box"><input type="number" v-model="durationTime"></div>
   </section>
   <!--缓动函数选择-->
   <section class="tween-group">
@@ -220,9 +267,9 @@ body {
   <div class="code-box">
     <div class="code-title">滑块动画代码</div>
     <div class="code-copy"
-      :class="{'code-copy-ok': sliderCopyTips === '复制成功'}"
-      v-if="sliderFuncCodeStr.length > 10"
-      @click="copySlider"
+        :class="{'code-copy-ok': sliderCopyTips === '复制成功'}"
+        v-if="sliderFuncCodeStr.length > 10"
+        @click="copySlider"
     >{{ sliderCopyTips }}
     </div>
     <div class="code">{{sliderFuncCodeStr}}</div>
@@ -231,9 +278,9 @@ body {
   <div class="code-box">
     <div class="code-title">轮盘动画代码</div>
     <div class="code-copy"
-      :class="{'code-copy-ok': runningLightCopyTips === '复制成功'}"
-      v-if="runningLightCodeStr.length > 10"
-      @click="copyRunningLight"
+        :class="{'code-copy-ok': runningLightCopyTips === '复制成功'}"
+        v-if="runningLightCodeStr.length > 10"
+        @click="copyRunningLight"
     >{{ runningLightCopyTips }}
     </div>
     <div class="code">{{runningLightCodeStr}}</div>
@@ -247,13 +294,13 @@ body {
 
 // requestAnimationFrame的兼容处理
 if (!window.requestAnimationFrame) {
-  requestAnimationFrame = function(fn) {
+  requestAnimationFrame = function (fn) {
     return setTimeout(fn, 17)
   }
 }
 
 if (!window.cancelAnimationFrame) {
-  cancelAnimationFrame = function(id) {
+  cancelAnimationFrame = function (id) {
     clearTimeout(id)
   }
 }
@@ -295,30 +342,25 @@ new Vue({
   },
 
   methods: {
-    // 显示轮盘动画
-    showRunningLight(tweenObj) {
-      clearTimeout(this.runningLightTimer)
-      this.runningLightCodeStr = '代码生成中...' // 去除旧代码值
 
-      let currentTime = 0
-      let sumTime = this.durationTime / 17 // 整个动画，一共多少次，每 17ms 执行一次
-      let startValue = 0
-      let endValue = 15 + this.runningLightItemNum * 2 // 奖品下标 + 轮盘至少转两圈
-      cancelAnimationFrame(this.runningLightTimer) // 去除旧动画
+    // 拷贝剪切板
+    copyToClipboard(content) {
 
-      let step = () => {
-        let value = tweenObj.func(currentTime, startValue, endValue, sumTime)
-        currentTime++
-        this.runningLightIndex = parseInt(value % this.runningLightItemNum)
-        if (currentTime > sumTime) {
-          console.log('动画结束')
-          this.runningLightIndex = 15
-          this.createRunningLightFuncCode(tweenObj)
-        } else {
-          this.runningLightTimer = requestAnimationFrame(step)
-        }
+      if (!document.queryCommandSupported('copy')) {
+        return false
       }
-      step()
+
+      let $input = document.createElement('textarea')
+      $input.style.opacity = '0'
+      $input.value = content
+      document.body.appendChild($input)
+      $input.select()
+
+      const result = document.execCommand('copy')
+      document.body.removeChild($input)
+      $input = null
+
+      return result
     },
 
     // 显示滑块动画
@@ -388,6 +430,39 @@ function showAnimation(finishCallback){
 `
     },
 
+    // 复制代码
+    copySlider() {
+      this.copyToClipboard(this.sliderFuncCodeStr)
+      this.sliderCopyTips = '复制成功'
+      setTimeout(() => this.sliderCopyTips = '复制代码', 800)
+    },
+
+    // 显示轮盘动画
+    showRunningLight(tweenObj) {
+      clearTimeout(this.runningLightTimer)
+      this.runningLightCodeStr = '代码生成中...' // 去除旧代码值
+
+      let currentTime = 0
+      let sumTime = this.durationTime / 17 // 整个动画，一共多少次，每 17ms 执行一次
+      let startValue = 0
+      let endValue = 15 + this.runningLightItemNum * 2 // 奖品下标 + 轮盘至少转两圈
+      cancelAnimationFrame(this.runningLightTimer) // 去除旧动画
+
+      let step = () => {
+        let value = tweenObj.func(currentTime, startValue, endValue, sumTime) + this.runningLightItemNum // 兼容负数
+        currentTime++
+        this.runningLightIndex = parseInt(value % this.runningLightItemNum)
+        if (currentTime > sumTime) {
+          console.log('动画结束')
+          this.runningLightIndex = 15
+          this.createRunningLightFuncCode(tweenObj)
+        } else {
+          this.runningLightTimer = requestAnimationFrame(step)
+        }
+      }
+      step()
+    },
+
     // 创建轮盘函数代码
     createRunningLightFuncCode(tweenObj) {
       this.runningLightCodeStr = `// 兼容 requestAnimationFrame 动画
@@ -417,7 +492,7 @@ function showAnimation(finishCallback){
 
   // 运行动画
   function runAnimation () {
-    let value = ${tweenObj.name}(currentTime, startValue, endValue, sumTime)
+    let value = ${tweenObj.name}(currentTime, startValue, endValue, sumTime) + runningLightNum // 兼容负数
     currentTime++;
     // 可添加自定义处理的代码
     高亮项目的索引 = parseInt(value % runningLightNum) // 设置当前滚动 icon 的索引
@@ -433,33 +508,6 @@ function showAnimation(finishCallback){
   runAnimation() // 执行动画
 }
 `
-    },
-
-    // 拷贝剪切板
-    copyToClipboard(content) {
-
-      if (!document.queryCommandSupported('copy')) {
-        return false
-      }
-
-      let $input = document.createElement('textarea')
-      $input.style.opacity = '0'
-      $input.value = content
-      document.body.appendChild($input)
-      $input.select()
-
-      const result = document.execCommand('copy')
-      document.body.removeChild($input)
-      $input = null
-
-      return result
-    },
-
-    // 复制代码
-    copySlider() {
-      this.copyToClipboard(this.sliderFuncCodeStr)
-      this.sliderCopyTips = '复制成功'
-      setTimeout(() => this.sliderCopyTips = '复制代码', 800)
     },
 
     // 复制代码
